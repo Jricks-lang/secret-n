@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Private Message For You</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- KANVAS UNTUK EFEK HUJAN PARTIKEL -->
+    <canvas id="canvasPartikel"></canvas>
+
+    <!-- 1. CONTAINER INPUT PIN -->
+    <div class="pin-container">
+        <h2>A Private Message For You</h2>
+        <p>Masukkan kode tanggal rahasia kita:</p>
+        <div class="pin-display" id="pinDisplay">_ _ _ _ _ _</div>
+
+        <div class="keyboard">
+            <button onclick="tekanAngka('1')">1</button>
+            <button onclick="tekanAngka('2')">2</button>
+            <button onclick="tekanAngka('3')">3</button>
+            
+            <button onclick="tekanAngka('4')">4</button>
+            <button onclick="tekanAngka('5')">5</button>
+            <button onclick="tekanAngka('6')">6</button>
+            
+            <button onclick="tekanAngka('7')">7</button>
+            <button onclick="tekanAngka('8')">8</button>
+            <button onclick="tekanAngka('9')">9</button>
+            
+            <button style="visibility: hidden;"></button> 
+            <button onclick="tekanAngka('0')">0</button>
+            <button onclick="hapusPIN()" class="tombol-hapus">X</button>
+        </div>
+    </div>
+
+    <!-- 2. HALAMAN MENYATAKAN PERASAAN -->
+    <div id="halamanHadiah" class="hidden">
+        <div class="confession-box">
+            <span class="emoji-utama">✨🌹✨</span>
+            <h1>I Have Something to Tell You...</h1>
+            
+            <!-- Silakan Tulis Isi Surat Anda Di Sini -->
+            <div class="surat-text">
+                <p>Hai.. terimakasih karena udah bener nebak PIN nya! </p>
+                <p>Jadi, .</p>
+                <p>.</p>
+                <p>. 🤍</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ELEMEN AUDIO UNTUK MUSIK ROMANTIS -->
+    <!-- Lagu akan berputar berulang terus-menerus berkat atribut loop -->
+    <audio id="musikLatar" src="Music.mp3.mp3" loop></audio>
+
+    <script>
+        // Tanggal rahasia untuk membuka pesan (Format: 22 April 2026)
+        const PIN_BENAR = "220426"; 
+        let pinInputSaatIni = "";
+
+        function tekanAngka(angka) {
+            if (pinInputSaatIni.length < 6) {
+                pinInputSaatIni += angka;
+                document.getElementById("pinDisplay").innerText = "• ".repeat(pinInputSaatIni.length) + "_ ".repeat(6 - pinInputSaatIni.length);
+            }
+
+            if (pinInputSaatIni.length === 6) {
+                setTimeout(cekPIN, 300);
+            }
+        }
+
+        function cekPIN() {
+            if (pinInputSaatIni === PIN_BENAR) {
+                // 1. Sembunyikan layar input PIN dan munculkan surat cinta
+                document.querySelector(".pin-container").classList.add("hidden");
+                document.getElementById("halamanHadiah").classList.remove("hidden");
+                
+                // 2. Mainkan musik latar secara otomatis setelah tombol diklik
+                const musik = document.getElementById("musikLatar");
+                musik.volume = 0.9; // Mengatur volume audio ke 40% agar suara pas di telinga
+                musik.play().catch(function(error) {
+                    console.log("Autoplay dicegah oleh browser, musik akan berputar pada interaksi berikutnya:", error);
+                });
+                
+                // 3. Nyalakan efek hujan partikel bunga & permen saat halaman terbuka
+                mulaiHujanPartikel();
+            } else {
+                alert("PIN Salah! Coba diingat-ingat lagi ya.");
+                hapusPIN();
+            }
+        }
+
+        function hapusPIN() {
+            pinInputSaatIni = "";
+            document.getElementById("pinDisplay").innerText = "_ _ _ _ _ _";
+        }
+
+        // --- SISTEM JAVASCRIPT ANIMASI PARTIKEL (CANVAS) ---
+        const canvas = document.getElementById("canvasPartikel");
+        const ctx = canvas.getContext("2d");
+
+        // Set ukuran kanvas penuh layar
+        function sesuaikanUkuranCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", sesuaikanUkuranCanvas);
+        sesuaikanUkuranCanvas();
+
+        // Kumpulan emoji bunga dan permen untuk dijatuhkan
+        const emojiPartikel = ["🌸", "🌹", "🌷", "🌺", "🍬", "🍭", "🍫"];
+        const jumlahPartikel = 40; // Kurangi/tambah angka ini untuk mengatur kepadatan hujan
+        const arrayPartikel = [];
+
+        class Partikel {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * -canvas.height; // Mulai dari atas luar layar
+                this.text = emojiPartikel[Math.floor(Math.random() * emojiPartikel.length)];
+                this.size = Math.random() * 15 + 15; // Ukuran acak antara 15px - 30px
+                this.speedY = Math.random() * 2 + 1; // Kecepatan jatuh acak
+                this.speedX = Math.random() * 1 - 0.5; // Efek ayunan kanan-kiri miring halus
+                this.angle = Math.random() * 360;
+                this.spin = Math.random() * 2 - 1; // Kecepatan berputar
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.angle += this.spin;
+                // Jika sudah melewati bawah layar, reset ke atas lagi agar hujan tiada henti
+                if (this.y > canvas.height) {
+                    this.y = -20;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.angle * Math.PI) / 180);
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.text, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function mulaiHujanPartikel() {
+            for (let i = 0; i < jumlahPartikel; i++) {
+                arrayPartikel.push(new Partikel());
+            }
+            loopAnimasi();
+        }
+
+        function loopAnimasi() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < arrayPartikel.length; i++) {
+                arrayPartikel[i].update();
+                arrayPartikel[i].draw();
+            }
+            requestAnimationFrame(loopAnimasi);
+        }
+    </script>
+</body>
+</html>
